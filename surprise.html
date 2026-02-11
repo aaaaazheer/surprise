@@ -1,0 +1,929 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>给你的小惊喜 ❤️</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            user-select: none;
+        }
+        body {
+            font-family: 'Arial Rounded MT Bold', 'Arial', sans-serif;
+            background: linear-gradient(135deg, #fce4ec, #f3e5f5);
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            overflow: hidden;
+            padding: 20px;
+            color: #d81b60;
+            text-align: center;
+            transition: background 1s ease;
+        }
+        h1 {
+            margin-bottom: 20px;
+            font-size: 1.8rem;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.1);
+            transition: opacity 0.5s;
+        }
+        #gameArea {
+            position: relative;
+            width: 90vw;
+            height: 60vh;
+            max-width: 500px;
+            max-height: 500px;
+            border: 3px dashed #ff80ab;
+            border-radius: 20px;
+            background-color: rgba(255, 255, 255, 0.7);
+            overflow: hidden;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+            margin-bottom: 20px;
+            transition: opacity 0.5s, transform 0.5s;
+        }
+        #target {
+            position: absolute;
+            width: 80px;
+            height: 80px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            background-image: url('https://cdn.jsdelivr.net/gh/twitter/twemoji@14.0.2/assets/svg/1f496.svg');
+            background-size: contain;
+            background-repeat: no-repeat;
+            background-position: center;
+            z-index: 10;
+        }
+        #message {
+            font-size: 1.3rem;
+            margin-bottom: 15px;
+            min-height: 2em;
+            font-weight: bold;
+            padding: 10px;
+            transition: opacity 0.5s;
+        }
+        #counter {
+            font-size: 1rem;
+            color: #888;
+            margin-bottom: 20px;
+            transition: opacity 0.5s;
+        }
+        
+        /* 新增的最终页面样式 */
+        #celebrationPage {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(45deg, #ff0080, #ff8c00, #40e0d0);
+            animation: rainbowBg 3s infinite alternate;
+            z-index: 100;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+        
+        @keyframes rainbowBg {
+            0% { background: linear-gradient(45deg, #ff0080, #ff8c00, #40e0d0); }
+            50% { background: linear-gradient(45deg, #ff8c00, #40e0d0, #ff0080); }
+            100% { background: linear-gradient(45deg, #40e0d0, #ff0080, #ff8c00); }
+        }
+        
+        #celebrationTitle {
+            font-size: 2.5rem;
+            color: white;
+            text-shadow: 0 0 10px rgba(255,255,255,0.8),
+                         0 0 20px rgba(255,255,255,0.6),
+                         0 0 30px rgba(255,255,255,0.4);
+            margin-bottom: 30px;
+            animation: pulse 1.5s infinite alternate;
+        }
+        
+        @keyframes pulse {
+            from { transform: scale(1); }
+            to { transform: scale(1.1); }
+        }
+        
+        #confetti {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 90;
+        }
+        
+        .confetti-piece {
+            position: absolute;
+            width: 10px;
+            height: 10px;
+            opacity: 0;
+            animation: confettiRain 5s infinite;
+        }
+        
+        @keyframes confettiRain {
+            0% {
+                opacity: 1;
+                top: -10px;
+                transform: rotate(0deg);
+            }
+            100% {
+                opacity: 0;
+                top: 100%;
+                transform: rotate(720deg);
+            }
+        }
+        
+        #clickPrompt {
+            font-size: 1.8rem;
+            color: white;
+            background: rgba(0,0,0,0.2);
+            padding: 20px 40px;
+            border-radius: 50px;
+            margin: 40px 0;
+            cursor: pointer;
+            animation: bounce 2s infinite;
+            transition: transform 0.3s;
+            border: 3px solid white;
+        }
+        
+        @keyframes bounce {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-10px); }
+        }
+        
+        #clickPrompt:hover {
+            background: rgba(255,255,255,0.2);
+            transform: scale(1.05);
+        }
+        
+        #surpriseText {
+            display: none;
+            font-size: 3.5rem;
+            color: #ffeb3b;
+            text-shadow: 0 0 20px #ff0000,
+                         0 0 30px #ff0000,
+                         0 0 40px #ff0000;
+            animation: surprisePop 0.5s ease-out forwards,
+                       glow 1.5s infinite alternate;
+            transform-origin: center;
+            margin-top: 30px;
+            margin-bottom: 20px;
+        }
+        
+        @keyframes surprisePop {
+            0% {
+                transform: scale(0);
+                opacity: 0;
+            }
+            70% {
+                transform: scale(1.2);
+                opacity: 1;
+            }
+            100% {
+                transform: scale(1);
+                opacity: 1;
+            }
+        }
+        
+        @keyframes glow {
+            from {
+                text-shadow: 0 0 20px #ff0000,
+                             0 0 30px #ff0000,
+                             0 0 40px #ff0000;
+            }
+            to {
+                text-shadow: 0 0 30px #ff0000,
+                             0 0 40px #ff0000,
+                             0 0 50px #ff0000;
+            }
+        }
+        
+        .hearts-container {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 80;
+        }
+        
+        .heart {
+            position: absolute;
+            color: #ff4081;
+            font-size: 24px;
+            animation: floatUp 5s linear infinite;
+            opacity: 0;
+        }
+        
+        @keyframes floatUp {
+            0% {
+                transform: translateY(100vh) rotate(0deg);
+                opacity: 1;
+            }
+            100% {
+                transform: translateY(-100px) rotate(360deg);
+                opacity: 0;
+            }
+        }
+        
+        /* 隐藏彩蛋相关样式 - 更自然的出现方式 */
+        #easterEggContainer {
+            position: absolute;
+            bottom: -100px;
+            right: 30px;
+            z-index: 120;
+            display: none;
+            flex-direction: column;
+            align-items: center;
+            transition: bottom 1.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+        
+        #easterEgg {
+            width: 70px;
+            height: 90px;
+            background: linear-gradient(45deg, #ffeb3b, #ff9800);
+            border-radius: 50% 50% 50% 50% / 60% 60% 40% 40%;
+            cursor: pointer;
+            position: relative;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.3);
+            animation: eggBreathing 2s ease-in-out infinite;
+            transition: transform 0.3s, box-shadow 0.3s;
+        }
+        
+        @keyframes eggBreathing {
+            0%, 100% { 
+                transform: translateY(0) scale(1);
+                box-shadow: 0 10px 25px rgba(0,0,0,0.3);
+            }
+            50% { 
+                transform: translateY(-8px) scale(1.05);
+                box-shadow: 0 15px 30px rgba(0,0,0,0.4);
+            }
+        }
+        
+        #easterEgg:hover {
+            transform: scale(1.1);
+            animation: none;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.5);
+        }
+        
+        #easterEgg::before {
+            content: '';
+            position: absolute;
+            top: 15px;
+            left: 15px;
+            width: 40px;
+            height: 40px;
+            background: rgba(255,255,255,0.3);
+            border-radius: 50%;
+        }
+        
+        .egg-sparkle {
+            position: absolute;
+            width: 6px;
+            height: 6px;
+            background: white;
+            border-radius: 50%;
+            box-shadow: 0 0 8px white;
+            animation: sparkleTwinkle 2s infinite alternate;
+        }
+        
+        @keyframes sparkleTwinkle {
+            0%, 100% { opacity: 0.3; }
+            50% { opacity: 1; }
+        }
+        
+        #eggHint {
+            color: white;
+            font-size: 0.9rem;
+            margin-top: 10px;
+            text-shadow: 0 2px 5px rgba(0,0,0,0.5);
+            opacity: 0;
+            animation: hintFadeIn 0.5s 2s forwards;
+            background: rgba(0,0,0,0.3);
+            padding: 5px 15px;
+            border-radius: 15px;
+            transform: translateY(10px);
+        }
+        
+        @keyframes hintFadeIn {
+            to {
+                opacity: 0.9;
+                transform: translateY(0);
+            }
+        }
+        
+        /* 隐藏告白页面 - 永远停留 */
+        #loveMessagePage {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(135deg, #ff0076, #ff6b9d, #ffb347);
+            z-index: 200;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+            animation: loveBg 5s infinite alternate;
+        }
+        
+        @keyframes loveBg {
+            0% { background: linear-gradient(135deg, #ff0076, #ff6b9d, #ffb347); }
+            50% { background: linear-gradient(135deg, #ff6b9d, #ffb347, #ff0076); }
+            100% { background: linear-gradient(135deg, #ffb347, #ff0076, #ff6b9d); }
+        }
+        
+        /* 告白文字容器 - 确保在爱心上层 */
+        .loveTextContainer {
+            position: relative;
+            z-index: 250;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .loveText {
+            font-size: 3rem;
+            color: white;
+            text-shadow: 0 0 20px rgba(255,255,255,0.8),
+                         0 0 30px rgba(255,20,147,0.8),
+                         0 0 40px rgba(255,20,147,0.6);
+            margin: 15px 0;
+            opacity: 0;
+            transform: translateY(50px);
+            animation: textReveal 0.8s ease-out forwards;
+            position: relative;
+            z-index: 251;
+        }
+        
+        @keyframes textReveal {
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        
+        #loveMessagePage .loveText:nth-child(1) { animation-delay: 0.3s; }
+        #loveMessagePage .loveText:nth-child(2) { animation-delay: 1.2s; }
+        #loveMessagePage .loveText:nth-child(3) { animation-delay: 2.1s; }
+        
+        /* 爱心雨容器 - 在文字下层 */
+        .heartRain {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 210;
+        }
+        
+        /* 爱心雨粒子 - 更小的尺寸 */
+        .heartRainPiece {
+            position: absolute;
+            font-size: 18px;
+            color: #ff4081;
+            opacity: 0;
+            animation: heartRainFall 8s linear infinite;
+            filter: drop-shadow(0 2px 4px rgba(0,0,0,0.2));
+        }
+        
+        @keyframes heartRainFall {
+            0% {
+                opacity: 0.8;
+                top: -50px;
+                transform: translateX(0) rotate(0deg);
+            }
+            10% {
+                opacity: 1;
+            }
+            90% {
+                opacity: 0.7;
+            }
+            100% {
+                opacity: 0;
+                top: 100%;
+                transform: translateX(var(--drift-x, 0)) rotate(720deg);
+            }
+        }
+        
+        /* 避免爱心经过文字区域的特殊爱心 */
+        .heartRainPiece.textAreaHeart {
+            font-size: 14px;
+            opacity: 0.4;
+            animation: heartRainFallTextArea 8s linear infinite;
+            z-index: 200;
+        }
+        
+        @keyframes heartRainFallTextArea {
+            0% {
+                opacity: 0.3;
+                top: -50px;
+                transform: translateX(0) rotate(0deg) scale(0.7);
+            }
+            50% {
+                opacity: 0.2;
+            }
+            100% {
+                opacity: 0;
+                top: 100%;
+                transform: translateX(var(--drift-x, 0)) rotate(720deg) scale(0.7);
+            }
+        }
+        
+        /* 永久停留提示 */
+        #permanentStay {
+            position: absolute;
+            bottom: 40px;
+            font-size: 1rem;
+            color: rgba(255,255,255,0.8);
+            background: rgba(0,0,0,0.3);
+            padding: 12px 25px;
+            border-radius: 25px;
+            opacity: 0;
+            animation: fadeIn 1s 4s forwards;
+            border: 1px solid rgba(255,255,255,0.4);
+            z-index: 251;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+        }
+        
+        #permanentStay::before {
+            content: '💝 ';
+            margin-right: 8px;
+        }
+        
+        @keyframes fadeIn {
+            to { opacity: 1; }
+        }
+
+        button {
+            padding: 12px 30px;
+            font-size: 1.1rem;
+            background: linear-gradient(to right, #ff4081, #ff80ab);
+            color: white;
+            border: none;
+            border-radius: 50px;
+            cursor: pointer;
+            box-shadow: 0 4px 10px rgba(255,64,129,0.3);
+            margin-top: 15px;
+            z-index: 110;
+        }
+        button:hover {
+            transform: scale(1.05);
+        }
+    </style>
+</head>
+<body>
+    <h1>云妮，不停地点击爱心会有惊喜哦 👀</h1>
+    <div id="gameArea">
+        <div id="target"></div>
+    </div>
+    <div id="message">快点击我呀！</div>
+    <div id="counter">尝试次数：0</div>
+    
+    <!-- 庆祝页面 -->
+    <div id="celebrationPage">
+        <h2 id="celebrationTitle">🎉 恭喜你！🎉</h2>
+        <div id="confetti"></div>
+        <div class="hearts-container"></div>
+        <div id="clickPrompt">✨ 请点击查看惊喜 ✨</div>
+        <div id="surpriseText">逗你玩！❤️ 😘</div>
+        
+        <!-- 隐藏彩蛋 -->
+        <div id="easterEggContainer">
+            <div id="easterEgg" title="点击我有惊喜哦！"></div>
+            <div id="eggHint">咦？这是什么...</div>
+        </div>
+        
+        <button onclick="location.reload()">再玩一次</button>
+    </div>
+    
+    <!-- 隐藏告白页面 - 永远停留 -->
+    <div id="loveMessagePage">
+        <div class="heartRain" id="heartRain"></div>
+        <div class="loveTextContainer">
+            <div class="loveText">💖 云妮 💖</div>
+            <div class="loveText">情人节快乐！</div>
+            <div class="loveText">💕 I LOVE YOU 💕</div>
+        </div>
+        
+        <!-- 永久停留提示 -->
+        <div id="permanentStay">这份爱意，永远为你停留 💖</div>
+    </div>
+
+    <script>
+        const target = document.getElementById('target');
+        const message = document.getElementById('message');
+        const counterDisplay = document.getElementById('counter');
+        const gameArea = document.getElementById('gameArea');
+        const celebrationPage = document.getElementById('celebrationPage');
+        const clickPrompt = document.getElementById('clickPrompt');
+        const surpriseText = document.getElementById('surpriseText');
+        const confettiContainer = document.getElementById('confetti');
+        const heartsContainer = document.querySelector('.hearts-container');
+        const celebrationTitle = document.getElementById('celebrationTitle');
+        const easterEggContainer = document.getElementById('easterEggContainer');
+        const easterEgg = document.getElementById('easterEgg');
+        const loveMessagePage = document.getElementById('loveMessagePage');
+        const heartRainContainer = document.getElementById('heartRain');
+        const loveTextContainer = document.querySelector('.loveTextContainer');
+        const permanentStay = document.getElementById('permanentStay');
+        const eggHint = document.getElementById('eggHint');
+
+        let count = 0;
+        const messages = [
+            "嘿嘿，没点到！",
+            "云妮，我在这儿呢！",
+            "速度太慢啦~",
+            "差一点点哦！",
+            "我可是会瞬移的！",
+            "再试试？😜",
+            "你的手指真可爱！",
+            "今晚的奶茶靠你自己了！",
+            "加油呀！",
+            "我爱你哦，快成功了！"
+        ];
+
+        // 设置初始随机位置
+        moveTargetRandomly();
+
+        target.addEventListener('mouseover', moveTarget);
+        target.addEventListener('touchstart', function(e) {
+            e.preventDefault();
+            moveTarget();
+        });
+
+        function moveTarget() {
+            count++;
+            counterDisplay.textContent = `尝试次数：${count}`;
+
+            if (count <= 10) {
+                message.textContent = messages[count - 1];
+            } else if (count > 10 && count < 15) {
+                message.textContent = "还不放弃呀？真有毅力！";
+            } else {
+                message.textContent = "太棒了！你抓到我了！";
+                setTimeout(showCelebrationPage, 500);
+                return;
+            }
+
+            moveTargetRandomly();
+        }
+
+        function moveTargetRandomly() {
+            const areaWidth = gameArea.clientWidth - target.clientWidth;
+            const areaHeight = gameArea.clientHeight - target.clientHeight;
+
+            const randomX = Math.floor(Math.random() * areaWidth);
+            const randomY = Math.floor(Math.random() * areaHeight);
+
+            target.style.left = `${randomX}px`;
+            target.style.top = `${randomY}px`;
+        }
+
+        function showCelebrationPage() {
+            // 隐藏游戏区域
+            document.querySelector('h1').style.opacity = '0';
+            gameArea.style.opacity = '0';
+            gameArea.style.transform = 'scale(0.8)';
+            message.style.opacity = '0';
+            counterDisplay.style.opacity = '0';
+
+            // 显示庆祝页面
+            setTimeout(() => {
+                celebrationPage.style.display = 'flex';
+                createConfetti();
+                createFloatingHearts();
+                playVictorySound();
+            }, 300);
+        }
+
+        // 创建五彩纸屑
+        function createConfetti() {
+            const colors = ['#ff4081', '#ffeb3b', '#4caf50', '#2196f3', '#9c27b0'];
+            for (let i = 0; i < 150; i++) {
+                const confetti = document.createElement('div');
+                confetti.className = 'confetti-piece';
+                confetti.style.left = Math.random() * 100 + '%';
+                confetti.style.backgroundColor = colors[Math.floor(Math.random() * colors.length)];
+                confetti.style.animationDelay = Math.random() * 5 + 's';
+                confetti.style.width = Math.random() * 15 + 5 + 'px';
+                confetti.style.height = confetti.style.width;
+                confettiContainer.appendChild(confetti);
+            }
+        }
+
+        // 创建漂浮爱心
+        function createFloatingHearts() {
+            for (let i = 0; i < 50; i++) {
+                const heart = document.createElement('div');
+                heart.className = 'heart';
+                heart.innerHTML = '❤️';
+                heart.style.left = Math.random() * 100 + '%';
+                heart.style.animationDelay = Math.random() * 3 + 's';
+                heart.style.fontSize = (Math.random() * 20 + 20) + 'px';
+                heartsContainer.appendChild(heart);
+            }
+        }
+
+        // 点击"请点击查看惊喜"时的效果
+        clickPrompt.addEventListener('click', function() {
+            // 隐藏点击提示
+            clickPrompt.style.animation = 'none';
+            clickPrompt.style.transform = 'scale(0)';
+            clickPrompt.style.opacity = '0';
+            
+            // 改变标题
+            celebrationTitle.innerHTML = '🎁 惊喜来啦！ 🎁';
+            
+            // 显示"逗你玩"文字
+            setTimeout(() => {
+                surpriseText.style.display = 'block';
+                
+                // 创建爆炸效果
+                setTimeout(() => {
+                    createExplosion(surpriseText.offsetLeft + surpriseText.offsetWidth/2, 
+                                  surpriseText.offsetTop + surpriseText.offsetHeight/2);
+                    
+                    // 自然出现彩蛋 - 先等用户欣赏完"逗你玩"
+                    setTimeout(() => {
+                        // 先让彩蛋容器显示（在屏幕外）
+                        easterEggContainer.style.display = 'flex';
+                        
+                        // 等待一会儿，让用户觉得惊喜已经结束了
+                        setTimeout(() => {
+                            // 彩蛋从下方缓缓升起
+                            easterEggContainer.style.bottom = '30px';
+                            
+                            // 添加彩蛋闪烁效果
+                            createEggSparkles();
+                            
+                            // 播放轻微的音效提示
+                            playSubtleHint();
+                            
+                        }, 2000);
+                        
+                    }, 800);
+                }, 300);
+            }, 500);
+        });
+
+        // 创建爆炸效果
+        function createExplosion(x, y) {
+            for (let i = 0; i < 12; i++) {
+                const spark = document.createElement('div');
+                spark.style.position = 'absolute';
+                spark.style.left = x + 'px';
+                spark.style.top = y + 'px';
+                spark.style.width = '15px';
+                spark.style.height = '15px';
+                spark.style.borderRadius = '50%';
+                spark.style.backgroundColor = ['#ff4081', '#ffeb3b', '#4caf50'][Math.floor(Math.random() * 3)];
+                spark.style.boxShadow = '0 0 10px currentColor';
+                spark.style.animation = `sparkAnimation 1s ease-out forwards ${i * 0.05}s`;
+                celebrationPage.appendChild(spark);
+                
+                setTimeout(() => spark.remove(), 1000);
+            }
+        }
+
+        // 创建彩蛋闪烁效果
+        function createEggSparkles() {
+            // 清除之前的闪烁效果
+            const existingSparkles = easterEgg.querySelectorAll('.egg-sparkle');
+            existingSparkles.forEach(sparkle => sparkle.remove());
+            
+            // 创建新的闪烁点
+            for (let i = 0; i < 5; i++) {
+                setTimeout(() => {
+                    for (let j = 0; j < 3; j++) {
+                        const sparkle = document.createElement('div');
+                        sparkle.className = 'egg-sparkle';
+                        
+                        // 随机位置
+                        const angle = Math.random() * Math.PI * 2;
+                        const distance = 20 + Math.random() * 25;
+                        const x = 35 + Math.cos(angle) * distance;
+                        const y = 45 + Math.sin(angle) * distance;
+                        
+                        sparkle.style.left = x + 'px';
+                        sparkle.style.top = y + 'px';
+                        sparkle.style.animationDelay = Math.random() + 's';
+                        
+                        easterEgg.appendChild(sparkle);
+                        
+                        // 随机时间后移除并创建新的
+                        setTimeout(() => {
+                            sparkle.remove();
+                        }, 1000 + Math.random() * 2000);
+                    }
+                }, i * 600);
+            }
+            
+            // 持续创建闪烁效果
+            setInterval(() => {
+                if (easterEgg.parentElement.style.display !== 'none') {
+                    const sparkle = document.createElement('div');
+                    sparkle.className = 'egg-sparkle';
+                    
+                    const angle = Math.random() * Math.PI * 2;
+                    const distance = 20 + Math.random() * 25;
+                    const x = 35 + Math.cos(angle) * distance;
+                    const y = 45 + Math.sin(angle) * distance;
+                    
+                    sparkle.style.left = x + 'px';
+                    sparkle.style.top = y + 'px';
+                    sparkle.style.animationDelay = Math.random() + 's';
+                    
+                    easterEgg.appendChild(sparkle);
+                    
+                    setTimeout(() => {
+                        sparkle.remove();
+                    }, 1500 + Math.random() * 1500);
+                }
+            }, 800);
+        }
+
+        // 彩蛋点击事件 - 永远停留在告白页面
+        easterEgg.addEventListener('click', showLoveMessage);
+
+        // 显示隐藏告白页面 - 永远停留
+        function showLoveMessage() {
+            // 隐藏庆祝页面
+            celebrationPage.style.display = 'none';
+            
+            // 显示告白页面
+            loveMessagePage.style.display = 'flex';
+            
+            // 创建大量爱心雨 - 持续不断
+            createEndlessHeartRain();
+            
+            // 播放庆祝音效（震动）
+            playCelebrationEffect();
+            
+            // 添加额外特效
+            setTimeout(() => {
+                createLoveExplosion();
+            }, 1000);
+        }
+        
+        // 创建无限爱心雨
+        function createEndlessHeartRain() {
+            // 清空现有的爱心
+            heartRainContainer.innerHTML = '';
+            
+            // 获取文字区域位置
+            const textRect = loveTextContainer.getBoundingClientRect();
+            const textAreaLeft = textRect.left;
+            const textAreaRight = textRect.right;
+            const textAreaTop = textRect.top;
+            const textAreaBottom = textRect.bottom;
+            
+            // 初始创建爱心
+            for (let i = 0; i < 60; i++) {
+                setTimeout(() => {
+                    createSingleHeart(textAreaLeft, textAreaRight, textAreaTop, textAreaBottom);
+                }, i * 150);
+            }
+            
+            // 持续生成爱心 - 永不停止
+            const heartInterval = setInterval(() => {
+                if (loveMessagePage.style.display === 'none') {
+                    clearInterval(heartInterval);
+                    return;
+                }
+                
+                // 每3秒生成一些新的爱心
+                for (let i = 0; i < 8; i++) {
+                    setTimeout(() => {
+                        createSingleHeart(textAreaLeft, textAreaRight, textAreaTop, textAreaBottom);
+                    }, i * 200);
+                }
+            }, 3000);
+        }
+        
+        // 创建单个爱心
+        function createSingleHeart(textAreaLeft, textAreaRight, textAreaTop, textAreaBottom) {
+            const heart = document.createElement('div');
+            
+            // 随机位置
+            const left = Math.random() * 100;
+            const xPos = (left / 100) * window.innerWidth;
+            
+            // 检查是否在文字区域
+            const isInTextArea = xPos >= textAreaLeft - 50 && xPos <= textAreaRight + 50;
+            
+            if (isInTextArea) {
+                // 在文字区域内的爱心 - 更小更透明
+                heart.className = 'heartRainPiece textAreaHeart';
+                heart.style.fontSize = (Math.random() * 10 + 12) + 'px';
+                heart.style.opacity = '0.4';
+            } else {
+                // 普通区域的爱心
+                heart.className = 'heartRainPiece';
+                heart.style.fontSize = (Math.random() * 12 + 16) + 'px';
+                heart.style.opacity = '0.8';
+            }
+            
+            heart.innerHTML = Math.random() > 0.7 ? '💖' : '❤️';
+            heart.style.left = left + '%';
+            heart.style.animationDelay = Math.random() * 2 + 's';
+            
+            // 随机漂移效果
+            const driftAmount = (Math.random() - 0.5) * 80;
+            heart.style.setProperty('--drift-x', driftAmount + 'px');
+            
+            // 随机颜色
+            const colors = ['#ff4081', '#ff6b9d', '#ff8c00', '#ffeb3b'];
+            heart.style.color = colors[Math.floor(Math.random() * colors.length)];
+            
+            heartRainContainer.appendChild(heart);
+            
+            // 动画结束后移除（但会有新的爱心不断生成）
+            setTimeout(() => {
+                if (heart.parentNode) {
+                    heart.remove();
+                }
+            }, 8000);
+        }
+        
+        // 创建爱心爆炸特效
+        function createLoveExplosion() {
+            const centerX = window.innerWidth / 2;
+            const centerY = window.innerHeight / 2;
+            
+            for (let i = 0; i < 40; i++) {
+                setTimeout(() => {
+                    const heart = document.createElement('div');
+                    heart.innerHTML = '💖';
+                    heart.style.position = 'absolute';
+                    heart.style.left = centerX + 'px';
+                    heart.style.top = centerY + 'px';
+                    heart.style.fontSize = '30px';
+                    heart.style.zIndex = '230';
+                    heart.style.animation = `loveExplode 1.5s ease-out forwards`;
+                    
+                    loveMessagePage.appendChild(heart);
+                    
+                    // 动画结束后移除
+                    setTimeout(() => heart.remove(), 1500);
+                }, i * 50);
+            }
+            
+            // 添加爱心爆炸动画
+            const style = document.createElement('style');
+            style.textContent = `
+                @keyframes loveExplode {
+                    0% {
+                        transform: translate(0, 0) scale(1) rotate(0deg);
+                        opacity: 1;
+                    }
+                    100% {
+                        transform: translate(${Math.cos(Math.random() * Math.PI * 2) * 200}px, 
+                                             ${Math.sin(Math.random() * Math.PI * 2) * 200}px) 
+                                   scale(0) rotate(720deg);
+                        opacity: 0;
+                    }
+                }
+            `;
+            document.head.appendChild(style);
+        }
+
+        // 模拟音效
+        function playVictorySound() {
+            if (navigator.vibrate) {
+                navigator.vibrate([100, 200, 100]);
+            }
+        }
+        
+        function playCelebrationEffect() {
+            if (navigator.vibrate) {
+                navigator.vibrate([50, 100, 50, 100, 50, 200, 100]);
+            }
+        }
+        
+        function playSubtleHint() {
+            if (navigator.vibrate) {
+                navigator.vibrate([50]);
+            }
+        }
+
+        // 初始状态
+        celebrationPage.style.display = 'none';
+        loveMessagePage.style.display = 'none';
+    </script>
+</body>
+</html>
